@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilhetinho — Painel do Músico</title>
+    <title>Bilhetinho — Shows & Apresentações ao Vivo</title>
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -15,270 +15,60 @@
 
 <body>
 
-    <!-- Barra de Navegação -->
-    <nav class="navbar navbar-expand-lg sticky-top">
+    <!-- Barra de Navegação: Logo à esquerda, Link da Área do Músico à direita -->
+    <nav class="navbar navbar-expand sticky-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+            <!-- Canto Esquerdo: Logo do Sistema -->
+            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html" title="Bilhetinho - Página Inicial">
                 <i class="bi bi-music-note-beamed fs-4 text-purple"></i>
                 <span class="brand-gradient fs-4">Bilhetinho</span>
             </a>
-            <div class="d-flex align-items-center gap-3">
-                <span id="navMusicoStatus"
-                    class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2">
-                    <i class="bi bi-person-circle me-1"></i> Não identificado
-                </span>
-                <button id="btnNavSair" class="btn btn-outline-danger btn-sm d-none" title="Sair do perfil">
-                    <i class="bi bi-box-arrow-right me-1"></i> Sair
-                </button>
+
+            <!-- Canto Direito: Link para acessar a Área do Músico -->
+            <div class="d-flex align-items-center gap-2">
+                <a href="musico.html" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" id="linkAreaMusico" title="Acessar painel do músico">
+                    <i class="bi bi-person-badge text-purple fs-6"></i>
+                    <span class="fw-semibold">Área do Músico</span>
+                </a>
             </div>
         </div>
     </nav>
 
-    <!-- Conteúdo Principal -->
+    <!-- Conteúdo Principal: Apresentação dos Eventos Ativos -->
     <main class="container py-5">
 
-        <!-- ========================================== -->
-        <!-- VISÃO 1: TELA DE LOGIN / IDENTIFICAÇÃO     -->
-        <!-- ========================================== -->
-        <section id="secaoLoginMusico" class="row justify-content-center">
-            <div class="col-12 col-sm-10 col-md-8 col-lg-5">
-                <div class="card card-custom p-4 p-md-5 text-center">
-                    <div class="rounded-circle bg-purple-subtle p-3 text-purple d-inline-flex mx-auto mb-3">
-                        <i class="bi bi-music-player fs-1"></i>
-                    </div>
-                    <h1 class="h4 fw-bold mb-2">Área do Músico</h1>
-                    <p class="text-secondary small mb-4">Informe seu e-mail para acessar seu painel artístico ou iniciar
-                        seu cadastro.</p>
-
-                    <form id="formLoginMusico" class="text-start" novalidate>
-                        <div class="mb-3">
-                            <label for="inputLoginEmail" class="form-label small text-secondary">E-mail do
-                                Músico</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-dark-subtle border-secondary-subtle text-secondary">
-                                    <i class="bi bi-envelope"></i>
-                                </span>
-                                <input type="email" class="form-control" id="inputLoginEmail"
-                                    placeholder="seuemail@exemplo.com" required>
-                            </div>
-                            <div class="form-text text-secondary">Se você já tiver cadastro, entraremos direto. Caso
-                                contrário, você completará seus dados.</div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary-gradient w-100 py-2 mt-2" id="btnAcessar">
-                            <i class="bi bi-arrow-right-circle me-1"></i> Continuar
-                        </button>
-                    </form>
-
-                    <hr class="border-secondary-subtle my-4">
-
-                    <p class="text-secondary small mb-0">
-                        É novo por aqui?
-                        <a href="#" id="linkIrParaCadastro"
-                            class="text-purple text-decoration-none fw-semibold">Cadastre seu perfil de músico</a>
-                    </p>
+        <!-- Cabeçalho da Seção de Shows Ativos -->
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-broadcast text-purple fs-4"></i>
+                    <h1 class="h4 fw-bold mb-0 text-white">Shows & Eventos Ativos</h1>
+                    <span id="badgeTotalAtivos" class="badge bg-purple-subtle text-purple border border-purple-subtle px-3 py-1">
+                        0 shows
+                    </span>
                 </div>
-            </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- VISÃO 2: TELA DE CADASTRO DE NOVO MÚSICO   -->
-        <!-- ========================================== -->
-        <section id="secaoCadastroMusico" class="row justify-content-center d-none">
-            <div class="col-12 col-sm-10 col-md-8 col-lg-6">
-                <div class="card card-custom p-4 p-md-5">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="rounded-circle bg-purple-subtle p-3 text-purple fs-2">
-                            <i class="bi bi-person-plus"></i>
-                        </div>
-                        <div>
-                            <h2 class="h4 fw-bold mb-1">Novo Cadastro de Músico</h2>
-                            <p class="text-secondary small mb-0">Crie seu perfil artístico para cadastrar shows e
-                                receber pedidos.</p>
-                        </div>
-                    </div>
-
-                    <form id="formCadastroMusico" novalidate>
-                        <div class="mb-3">
-                            <label for="inputCadastroNome" class="form-label small text-secondary">Nome Artístico ou
-                                Nome Completo</label>
-                            <input type="text" class="form-control" id="inputCadastroNome"
-                                placeholder="Ex: Lucas dos Teclados" maxlength="100" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="inputCadastroEmail" class="form-label small text-secondary">E-mail de
-                                Contato</label>
-                            <input type="email" class="form-control" id="inputCadastroEmail"
-                                placeholder="seuemail@exemplo.com" maxlength="100" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="inputCadastroEstilo" class="form-label small text-secondary">Estilo Musical
-                                (Opcional)</label>
-                            <input type="text" class="form-control" id="inputCadastroEstilo"
-                                placeholder="Ex: Sertanejo Acústico, Rock Clássico, MPB" maxlength="50">
-                        </div>
-
-                        <div class="d-flex flex-column flex-sm-row gap-2">
-                            <button type="button" id="btnVoltarLogin"
-                                class="btn btn-outline-secondary py-2 flex-grow-1">
-                                <i class="bi bi-arrow-left me-1"></i> Voltar ao Login
-                            </button>
-                            <button type="submit" class="btn btn-primary-gradient py-2 flex-grow-1"
-                                id="btnConcluirCadastro">
-                                <i class="bi bi-check-circle me-1"></i> Concluir Cadastro
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- VISÃO 3: PAINEL DO MÚSICO ATIVO (LOGADO)   -->
-        <!-- ========================================== -->
-        <section id="secaoPainelMusico" class="d-none">
-
-            <!-- Card de Perfil do Músico Ativo -->
-            <div class="card card-custom p-4 mb-4">
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle bg-purple-subtle p-3 text-purple fs-2">
-                            <i class="bi bi-person-badge"></i>
-                        </div>
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <h2 class="h5 fw-bold mb-0 text-white" id="painelNome">Nome do Músico</h2>
-                                <span class="badge badge-active">Conectado</span>
-                            </div>
-                            <p class="text-secondary small mb-0">
-                                <span class="me-3"><i class="bi bi-envelope me-1"></i> <span
-                                        id="painelEmail">email@exemplo.com</span></span>
-                                <span><i class="bi bi-music-note me-1"></i> <span id="painelEstilo">Estilo</span></span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <p class="text-secondary small mb-0">
+                    Acompanhe as apresentações ao vivo que estão acontecendo nos bares e palcos parceiros.
+                </p>
             </div>
 
-            <!-- Seção de Shows e Eventos do Músico -->
-            <div class="row g-4">
-                <div class="col-12">
-                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-calendar2-event text-purple fs-4"></i>
-                            <h3 class="h5 fw-bold mb-0 text-white">Seus Shows & Eventos</h3>
-                            <span id="badgeTotalEventos" class="badge bg-purple-subtle text-purple border border-purple-subtle">0 shows</span>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button id="btnAbrirModalNovoEvento" class="btn btn-primary-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
-                                <i class="bi bi-plus-circle me-1"></i> Novo Show
-                            </button>
-                            <button id="btnRecarregarEventos" class="btn btn-outline-secondary btn-sm" title="Recarregar lista de shows">
-                                <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Lista dinâmica de eventos -->
-                    <div id="containerListaEventos" class="row g-3">
-                        <!-- Cards renderizados dinamicamente pelo app.js -->
-                    </div>
-                </div>
+            <div>
+                <button id="btnRecarregarAtivos" class="btn btn-outline-secondary btn-sm" title="Recarregar lista de shows ativos">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
+                </button>
             </div>
+        </div>
 
-        </section>
+        <!-- Grid de Cards de Shows Ativos -->
+        <div id="containerShowsAtivos" class="row g-4">
+            <!-- Cards renderizados dinamicamente pelo js/app.js -->
+        </div>
 
     </main>
 
-    <!-- Modal para Cadastro de Novo Show / Evento -->
-    <div class="modal fade" id="modalNovoEvento" tabindex="-1" aria-labelledby="modalNovoEventoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content card-custom border-secondary-subtle">
-                <div class="modal-header border-secondary-subtle">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-calendar-plus text-purple fs-4"></i>
-                        <h2 class="modal-title h5 fw-bold text-white mb-0" id="modalNovoEventoLabel">Cadastrar Novo Show</h2>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="formNovoEvento" novalidate>
-                        
-                        <!-- Bloco 1: Dados do Show -->
-                        <h3 class="h6 fw-bold text-purple mb-3">
-                            <i class="bi bi-info-circle me-1"></i> Informações do Show
-                        </h3>
-                        <div class="row g-3 mb-4">
-                            <div class="col-12 col-md-8">
-                                <label for="inputEventoNome" class="form-label small text-secondary">Nome do Show / Apresentação</label>
-                                <input type="text" class="form-control" id="inputEventoNome" placeholder="Ex: Noite Acústica - Clássicos do Rock" maxlength="100" required>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label for="inputEventoDataHora" class="form-label small text-secondary">Data e Hora de Início</label>
-                                <input type="datetime-local" class="form-control" id="inputEventoDataHora" required>
-                            </div>
-                            <div class="col-12">
-                                <label for="inputEventoLocal" class="form-label small text-secondary">Nome do Estabelecimento / Local</label>
-                                <input type="text" class="form-control" id="inputEventoLocal" placeholder="Ex: Bar do Zé, Cervejaria Central, Restaurante Villa" maxlength="100" required>
-                            </div>
-                        </div>
-
-                        <!-- Bloco 2: Endereço com Busca por CEP integrada ao ViaCEP -->
-                        <h3 class="h6 fw-bold text-purple mb-3">
-                            <i class="bi bi-geo-alt me-1"></i> Endereço do Local (com Busca Automática por CEP)
-                        </h3>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-4">
-                                <label for="inputEventoCep" class="form-label small text-secondary">CEP</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="inputEventoCep" placeholder="Ex: 38060-480" maxlength="9" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="btnBuscarCep" title="Buscar endereço pelo CEP">
-                                        <i class="bi bi-search"></i>
-                                    </button>
-                                </div>
-                                <div id="cepStatusFeedback" class="form-text text-secondary small">Digite o CEP e clique na lupa (ou pressione Enter).</div>
-                            </div>
-                            <div class="col-12 col-md-8">
-                                <label for="inputEventoLogradouro" class="form-label small text-secondary">Logradouro (Rua, Av, Praça)</label>
-                                <input type="text" class="form-control" id="inputEventoLogradouro" placeholder="Ex: Rua Novo Horizonte" maxlength="150" required>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label for="inputEventoNumero" class="form-label small text-secondary">Número</label>
-                                <input type="text" class="form-control" id="inputEventoNumero" placeholder="Ex: 150 ou S/N" maxlength="20" required>
-                            </div>
-                            <div class="col-12 col-md-8">
-                                <label for="inputEventoComplemento" class="form-label small text-secondary">Complemento (Opcional)</label>
-                                <input type="text" class="form-control" id="inputEventoComplemento" placeholder="Ex: Loja 2, Ao lado do posto" maxlength="50">
-                            </div>
-                            <div class="col-12 col-md-5">
-                                <label for="inputEventoBairro" class="form-label small text-secondary">Bairro</label>
-                                <input type="text" class="form-control" id="inputEventoBairro" placeholder="Ex: Centro" maxlength="100" required>
-                            </div>
-                            <div class="col-12 col-md-5">
-                                <label for="inputEventoCidade" class="form-label small text-secondary">Cidade</label>
-                                <input type="text" class="form-control" id="inputEventoCidade" placeholder="Ex: Uberaba" maxlength="100" required>
-                            </div>
-                            <div class="col-12 col-md-2">
-                                <label for="inputEventoUf" class="form-label small text-secondary">UF</label>
-                                <input type="text" class="form-control text-uppercase" id="inputEventoUf" placeholder="MG" maxlength="2" required>
-                            </div>
-                        </div>
-
-                    </form>
-                </div>
-                <div class="modal-footer border-secondary-subtle">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary-gradient px-4" id="btnSalvarNovoEvento">
-                        <i class="bi bi-save me-1"></i> Cadastrar Show
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Container para Notificações -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="feedbackToast" class="toast align-items-center text-bg-dark border-0" role="alert"
+        <div id="homeToast" class="toast align-items-center text-bg-dark border-0" role="alert"
             aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body d-flex align-items-center gap-2" id="toastMessage">
@@ -292,8 +82,8 @@
 
     <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Script Modular da Aplicação -->
-    <script type="module" src="js/app.js?v=1.1.0"></script>
+    <!-- Script da Página Inicial de Shows Ativos -->
+    <script type="module" src="js/app.js?v=2.0.0"></script>
 </body>
 
 </html>

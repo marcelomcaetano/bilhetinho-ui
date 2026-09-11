@@ -366,12 +366,10 @@ function configurarOuvintesEventos() {
         });
     }
 
-    // Ação: Trocar de Show (voltar para Etapa 1)
+    // Ação: Acessar outro show (retorna para a página inicial index.html)
     if (btnTrocarShow) {
         btnTrocarShow.addEventListener('click', () => {
-            eventoAtual = null;
-            limparFormularioBilhetinho();
-            exibirSecao('identificar');
+            window.location.href = 'index.html';
         });
     }
 
@@ -383,13 +381,10 @@ function configurarOuvintesEventos() {
         });
     }
 
-    // Ação: Trocar de show a partir da tela de sucesso
+    // Ação: Acessar outro show a partir da tela de sucesso (retorna para a página inicial index.html)
     if (btnVoltarInicio) {
         btnVoltarInicio.addEventListener('click', () => {
-            eventoAtual = null;
-            if (inputCodigoEvento) inputCodigoEvento.value = '';
-            limparFormularioBilhetinho();
-            exibirSecao('identificar');
+            window.location.href = 'index.html';
         });
     }
 }

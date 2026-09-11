@@ -4,6 +4,11 @@ import { request } from './client.js';
  * Módulo de integração com os endpoints de Eventos (/api/eventos).
  */
 
+export async function listarEventosAtivos(cidade = null) {
+    const query = cidade ? `?cidade=${encodeURIComponent(cidade)}` : '';
+    return request(`/eventos${query}`);
+}
+
 export async function listarEventosPorMusico(musicoId) {
     return request(`/eventos/musico/${musicoId}`);
 }
