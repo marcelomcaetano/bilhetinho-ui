@@ -12,90 +12,141 @@ Marcelo M. Caetano
 
 ---
 
-## Visão Geral da Aplicação
+## O que este projeto representa
 
-O **Bilhetinho UI** é o módulo de **Interface com o Usuário (Front-End)** do sistema Bilhetinho. Desenvolvido com **Vanilla JavaScript (ES6 Modules)**, **HTML5** e **Bootstrap 5.3 Dark Mode**, entrega uma experiência ágil, responsiva e moderna com separação clara de contextos por papéis e páginas dedicadas:
+O **Bilhetinho UI** representa o módulo de **Interface com o Usuário (Front-End)** do ecossistema Bilhetinho. Ele é a camada visual e interativa responsável por conectar o público presente nos estabelecimentos aos músicos no palco, eliminando o uso de guardanapos de papel ou a intermediação de garçons para pedidos de música.
 
-### 1. Página Inicial — Shows Ativos (`index.html` + `js/app.js`)
-* **Barra de Navegação:** Logotipo do sistema no canto esquerdo e botão de navegação direta para a **Área do Músico** no canto direito.
-* **Vitrine de Shows ao Vivo:** Apresenta todos os eventos com status `ATIVO` cadastrados no banco de dados (consumindo a rota `GET /api/eventos`).
-* **Cards Informativos:** Exibição detalhada com nome do show, músico/artista participante, local, data/hora formatada no padrão brasileiro, endereço completo e badge de status ativo.
-* **Ação "Acessar Show":** Cada card possui um botão de ação rápida que copia automaticamente o código UUID do evento para a área de transferência do usuário e o redireciona diretamente para a página de pedidos (`bilhetinho.html`).
-* **Recarregamento Dinâmico:** Botão para atualizar a listagem e estado vazio (*empty state*) caso não haja apresentações ativas no momento.
-
-### 2. Área do Músico — Palco & Gestão (`musico.html` + `js/musico.js`)
-* **Identificação / Login por E-mail:** Autenticação simplificada por e-mail com persistência de sessão via `localStorage` (`bilhetinho_musico_ativo`). Redireciona automaticamente para a tela de cadastro caso o e-mail não exista na base de dados.
-* **Painel do Músico:** Cabeçalho com dados do artista (nome, e-mail e estilo musical) e botão de desconexão seguro (`Sair`).
-* **Gestão de Apresentações:** Listagem dinâmica dos eventos cadastrados do próprio músico logado (`GET /api/eventos/musico/{id}`).
-* **Cadastro de Show com ViaCEP:** Modal integrado à API pública do **ViaCEP** com busca automática de endereço por CEP de 8 dígitos e preenchimento instantâneo de logradouro, bairro, cidade e UF.
-* **Ciclo de Vida e Limpeza Automática:** Função de reset robusta que zera todos os campos e feedbacks em qualquer evento de abertura, cancelamento, fechamento ou após a conclusão com sucesso do cadastro do show.
-* **Navegação Integrada:** Botão *"Shows Ativos"* no topo permitindo alternar de volta à página inicial a qualquer momento.
-
-### 3. Área de Envio do Bilhetinho (`bilhetinho.html` + `js/bilhetinho.js`)
-* **Experiência Mobile-First:** Interface focada e otimizada para smartphones e dispositivos móveis para o público presente no bar/show.
-* **Localização do Evento:** 
-  * Campo para digitar ou colar o código do show (UUID) lido a partir do QR Code.
-  * Suporte nativo a acesso direto via leitura de QR Code através de parâmetros na URL (`/bilhetinho.html?evento=<UUID>`), carregando o show instantaneamente.
-  * Bloqueio automático com aviso caso o show esteja com status `ENCERRADO`.
-* **Integração com iTunes Search API (`js/api/itunes.js`):**
-  * Busca de músicas em tempo real conforme o usuário digita (debounce de 300ms).
-  * Exibição estrita apenas de **Nome da Faixa** e **Nome do Artista** (sem player de áudio e sem capas de álbum).
-  * Algoritmo de **deduplicação inteligente** para evitar faixas repetidas do mesmo artista (coletâneas, ao vivo, etc.).
-  * Seleção com um toque para preenchimento dos campos estruturados de música e artista.
-* **Envio do Bilhetinho:** 
-  * Nome do solicitante opcional (preenchimento automático como `"Anônimo"` caso não informado).
-  * Mensagem/recado opcional para o artista (até 255 caracteres).
-  * Disparo para `POST /api/bilhetinhos` e tela de confirmação de entrega com detalhes do pedido.
-* **Navegação de Retorno:** Botão *"Acessar outro show"* que redireciona de volta à página inicial (`index.html`) para consulta da grade de eventos.
+A aplicação foi construída com foco em simplicidade, velocidade e responsividade, utilizando **Vanilla JavaScript modular (ES6 Modules)**, **HTML5** e **Bootstrap 5.3 em modo escuro nativo (Dark Mode)**, sem dependência de frameworks compilados ou ferramentas pesadas de build.
 
 ---
 
-## Estrutura de Arquivos
+## Estrutura de Visões e Papéis do Sistema
+
+A experiência do usuário é distribuída em três visões com páginas HTML e scripts dedicados, garantindo o isolamento de responsabilidades e alta performance:
+
+### 1. Página Inicial — Shows Ativos (`index.html` + `js/app.js`)
+* **Propósito:** Atuar como a vitrine pública das apresentações ao vivo que estão ocorrendo no momento.
+* **Barra de Navegação:** Logotipo do sistema à esquerda e botão de navegação direta para a **Área do Músico** (`musico.html`) à direita.
+* **Vitrine Dinâmica de Shows:** Consulta em tempo real o endpoint `GET /api/eventos` do back-end e renderiza cada apresentação ativa em formato de card informativo.
+* **Conteúdo dos Cards:** Nome do evento, artista/músico participante, nome do estabelecimento/local, data e hora formatadas no padrão brasileiro e endereço completo.
+* **Botão "Acessar Show":** Cada card disponibiliza um botão que copia automaticamente o código identificador universal (UUID) do evento para a área de transferência do usuário e redireciona de imediato para a tela de envio de pedidos (`bilhetinho.html`).
+* **Recarregamento e Estado Vazio:** Botão para atualizar a listagem e mensagem visual amigável quando não houver shows ativos cadastrados.
+
+### 2. Área do Músico — Palco & Gestão (`musico.html` + `js/musico.js`)
+* **Propósito:** Painel administrativo e operacional para o artista cadastrar e gerenciar seus shows.
+* **Identificação e Login por E-mail:** Entrada direta sem senha mediante verificação do e-mail no back-end (`GET /api/musicos/email/{email}`).
+* **Cadastro Rápido de Perfil:** Caso o e-mail não seja localizado, o usuário é direcionado para a tela de criação de perfil de músico (nome artístico, e-mail e estilo musical).
+* **Persistência de Sessão:** Utiliza o `localStorage` do navegador para manter o músico conectado após recarregamentos da página, com opção explícita de encerramento de sessão (`Sair`).
+* **Listagem dos Shows do Artista:** Apresenta exclusivamente os eventos vinculados ao identificador do músico logado (`GET /api/eventos/musico/{id}`).
+* **Cadastro de Novo Show com ViaCEP:**
+  * Modal com formulário para informações da apresentação (nome, data/hora, estabelecimento).
+  * **Busca Automática de CEP:** Ao digitar 8 dígitos numéricos (ou clicar na lupa), consome a rota `/api/enderecos/cep/{cep}` e preenche automaticamente logradouro, bairro, cidade e UF.
+* **Limpeza Automática de Formulários:** Ciclo de vida robusto que zera completamente todos os campos, estados de validação e textos informativos ao abrir o modal, ao fechar (botão fechar, cancelar, tecla ESC ou clique fora) e logo após o cadastro com sucesso do evento.
+* **Navegação de Retorno:** Botão no topo para retorno à página inicial de shows ativos (`index.html`).
+
+### 3. Área de Envio do Bilhetinho (`bilhetinho.html` + `js/bilhetinho.js`)
+* **Propósito:** Interface *mobile-first* voltada para o público no bar/restaurante enviar pedidos de música para a apresentação ao vivo.
+* **Acesso e Localização do Show:**
+  * **Via Código / Área de Transferência:** Campo para digitar ou colar o UUID do evento lido do QR Code (ou copiado na página inicial).
+  * **Via URL Direta (QR Code):** Ao escanear o QR Code que contém o parâmetro `?evento=<UUID>`, a página reconhece o código na URL e carrega os dados do show instantaneamente.
+* **Validação de Status:** Se o show estiver marcado como `ENCERRADO`, a tela exibe um aviso e bloqueia novos envios de bilhetinhos.
+* **Formulário de Envio do Bilhetinho:**
+  * **Música e Artista (Obrigatórios):** Integração com a **iTunes Search API** (detalhada na seção de APIs externas). O usuário pode escolher uma das sugestões ou preencher os campos manualmente.
+  * **Nome do Solicitante (Opcional):** Caso deixado em branco, o front-end envia o valor padrão `"Anônimo"`.
+  * **Mensagem / Recado (Opcional):** Campo para dedicatórias ou observações para o músico (até 255 caracteres).
+* **Tela de Sucesso e Feedback:** Confirmação visual informando que o bilhetinho foi entregue na fila do artista, com resumo do pedido e botão para pedir outra música.
+* **Botão "Acessar outro show":** Tanto no formulário quanto na tela de confirmação, redireciona o usuário de volta à página inicial (`index.html`).
+
+---
+
+## Integração com APIs
+
+### 1. Consumo de API Externa Pública — iTunes Search API (Apple)
+Em conformidade com os critérios avaliativos de consumo de API externa do MVP, o front-end integra-se diretamente à **iTunes Search API**:
+* **Endpoint Consumido:** `https://itunes.apple.com/search?term={termo}&entity=song&limit=15`
+* **Módulo Implementado:** [`js/api/itunes.js`](js/api/itunes.js)
+* **Diretrizes e Regras de Negócio do Projeto:**
+  * **Exibição Estrita de Texto:** Apresenta apenas o **Nome da Faixa** e o **Nome do Artista** (sem inclusão de player de áudio e sem exibição de capas de álbum).
+  * **Deduplicação Inteligente:** Filtra faixas idênticas do mesmo artista presentes em múltiplos álbuns (estúdio, ao vivo, coletâneas), assegurando que o dropdown de sugestões não apresente itens duplicados.
+  * **Debounce de Digitação:** Temporizador de 300ms para evitar chamadas excessivas e garantir economia de requisições.
+
+### 2. Consumo de API Externa — ViaCEP (via Back-End)
+* **Finalidade:** Agilizar o preenchimento de endereço físico no cadastro de shows do músico.
+* **Fluxo:** O front-end envia o CEP digitado para a rota `/api/enderecos/cep/{cep}` da `bilhetinho-api`, que atua como proxy normalizador consumindo o Web Service do [ViaCEP](https://viacep.com.br/).
+
+### 3. Integração com a API Própria (`bilhetinho-api` na porta 8080)
+A comunicação é encapsulada na pasta modular [`js/api/`](js/api/), com tratamento padronizado de erros e respostas JSON:
+
+| Módulo | Endpoint / Rota | Descrição da Operação |
+|---|---|---|
+| [`musicos.js`](js/api/musicos.js) | `GET /api/musicos/email/{email}` | Consulta músico para login direto |
+| [`musicos.js`](js/api/musicos.js) | `POST /api/musicos` | Cadastro de novo perfil artístico |
+| [`eventos.js`](js/api/eventos.js) | `GET /api/eventos` | Lista todos os shows com status `ATIVO` |
+| [`eventos.js`](js/api/eventos.js) | `GET /api/eventos/musico/{id}` | Lista shows de um músico específico |
+| [`eventos.js`](js/api/eventos.js) | `GET /api/eventos/codigo/{uuid}` | Localiza apresentação pelo código do QR Code |
+| [`eventos.js`](js/api/eventos.js) | `POST /api/eventos` | Cria novo evento com endereço integrado |
+| [`enderecos.js`](js/api/enderecos.js) | `GET /api/enderecos/cep/{cep}` | Consulta dados de endereço por CEP |
+| [`bilhetinhos.js`](js/api/bilhetinhos.js) | `POST /api/bilhetinhos` | Envia pedido de música para o show ativo |
+
+---
+
+## Estrutura de Arquivos e Diretórios
 
 ```text
 bilhetinho-ui/
-├── index.html              # Página Inicial (Grade de Shows Ativos)
-├── musico.html             # Área do Músico (Login, Perfil e Gestão de Shows)
+├── index.html              # Página Inicial (Vitrine de Shows Ativos)
+├── musico.html             # Área do Músico (Login, Cadastro e Gestão de Shows)
 ├── bilhetinho.html         # Área de Envio do Bilhetinho (Mobile-First / QR Code)
 ├── css/
-│   └── style.css           # Tema Dark, gradientes e estilos do autocomplete
-└── js/
-    ├── app.js              # Lógica da Página Inicial de Shows Ativos
-    ├── musico.js           # Lógica da Área e Painel do Músico
-    ├── bilhetinho.js       # Lógica da Área de Envio de Pedidos
-    └── api/                # Camada modular de comunicação REST
-        ├── client.js       # Wrapper Fetch base com tratamento de erros
-        ├── musicos.js      # Integração com /api/musicos
-        ├── eventos.js      # Integração com /api/eventos
-        ├── enderecos.js    # Integração com /api/enderecos (ViaCEP)
-        ├── bilhetinhos.js  # Integração com /api/bilhetinhos
-        └── itunes.js       # Integração com a iTunes Search API
+│   └── style.css           # Estilos personalizados, gradientes e autocomplete
+├── js/
+│   ├── app.js              # Controlador da Página Inicial (Shows Ativos)
+│   ├── musico.js           # Controlador da Área do Músico
+│   ├── bilhetinho.js       # Controlador da Área de Envio de Bilhetinhos
+│   └── api/                # Serviços modulares de comunicação REST (Fetch API)
+│       ├── client.js       # Wrapper HTTP base com captura de status e erros
+│       ├── musicos.js      # Operações de Músicos
+│       ├── eventos.js      # Operações de Eventos e Shows
+│       ├── enderecos.js    # Consulta de endereços via ViaCEP
+│       ├── bilhetinhos.js  # Envio de pedidos e consulta de fila
+│       └── itunes.js       # Integração direta com iTunes Search API
+├── .gitignore              # Configuração de arquivos ignorados pelo Git
+└── README.md               # Documentação técnica e operacional do front-end
 ```
 
 ---
 
-## Tecnologias Empregadas
+## Tecnologias e Bibliotecas
 
-* **HTML5 Semântico:** Estrutura acessível com metatags e viewport responsivo.
-* **Vanilla JavaScript (ES6+):** Módulos nativos (`import`/`export`), sem necessidade de bundlers ou frameworks pesados.
-* **Bootstrap 5.3:** Framework CSS com tema escuro nativo (`data-bs-theme="dark"`), sistema de grid e componentes modais/toasts.
-* **Bootstrap Icons:** Biblioteca oficial de ícones vetoriais.
-* **APIs Externas Integradas:**
-  * **ViaCEP:** Preenchimento automático de logradouros a partir de CEP de 8 dígitos.
-  * **iTunes Search API:** Sugestões e autocompletes de músicas e artistas em tempo real.
+* **HTML5:** Estruturação semântica, formulários acessíveis e suporte a viewport responsivo.
+* **Vanilla JavaScript (ES6+):** Código modular baseado em ES Modules (`import`/`export`), assincronismo com `async/await`, Fetch API e manipulação eficiente do DOM.
+* **Bootstrap 5.3 (Dark Mode):** Framework visual moderno configurado com tema escuro nativo (`data-bs-theme="dark"`), modais, componentes de grid e toasts de notificação.
+* **Bootstrap Icons 1.11:** Biblioteca de ícones vetoriais em formato SVG/fonte.
+* **Apple iTunes Search API:** API externa de busca de faixas musicais e artistas.
+* **ViaCEP:** Web Service brasileiro de endereçamento postal por CEP.
 
 ---
 
 ## Como Executar Localmente
 
-Como a aplicação é estática e modular baseada em ES6 Modules, utilize qualquer servidor web estático local:
+### Pré-requisitos
+* A API do back-end (`bilhetinho-api`) deve estar em execução na porta `8080` (consulte a documentação em `bilhetinho-api/README.md`).
+* Um servidor web para servir arquivos estáticos locais (necessário para que o navegador processe ES Modules sem bloqueios de CORS por protocolo `file://`).
 
-```bash
-# A partir do diretório do front-end:
-npx -y serve -p 3000
-```
+### Passos para Execução:
 
-Rotas disponíveis no navegador:
-* **Página Inicial (Shows Ativos):** [http://localhost:3000](http://localhost:3000) (ou `/index.html`)
-* **Área do Músico:** [http://localhost:3000/musico.html](http://localhost:3000/musico.html)
-* **Envio de Bilhetinho:** [http://localhost:3000/bilhetinho.html](http://localhost:3000/bilhetinho.html)
+1. **Abra o terminal no diretório do front-end:**
+   ```bash
+   cd MVP/bilhetinho-webgui/bilhetinho-ui
+   ```
+
+2. **Inicie o servidor estático (usando o utilitário `serve` via npx):**
+   ```bash
+   npx -y serve -p 3000
+   ```
+   *(Ou utilize qualquer servidor estático de sua preferência, como a extensão Live Server do VS Code ou `python -m http.server 3000`)*.
+
+3. **Acesse as páginas no navegador:**
+   * **Página Inicial (Shows Ativos):** [http://localhost:3000](http://localhost:3000) (ou `http://localhost:3000/index.html`)
+   * **Área do Músico (Palco & Gestão):** [http://localhost:3000/musico.html](http://localhost:3000/musico.html)
+   * **Envio de Bilhetinho (Público):** [http://localhost:3000/bilhetinho.html](http://localhost:3000/bilhetinho.html)
