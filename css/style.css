@@ -1,0 +1,121 @@
+:root {
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --card-bg: #1e1e2d;
+    --card-border: rgba(255, 255, 255, 0.08);
+    --accent-color: #a855f7;
+}
+
+body {
+    background-color: #12121a;
+    color: #f3f4f6;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+}
+
+.navbar {
+    background: rgba(30, 30, 45, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.brand-gradient {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.card-custom {
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-custom:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.btn-primary-gradient {
+    background: var(--primary-gradient);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.btn-primary-gradient:hover {
+    opacity: 0.92;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.badge-active {
+    background: rgba(168, 85, 247, 0.18);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.toast-container {
+    z-index: 1080;
+}
+
+.text-purple {
+    color: #a855f7 !important;
+}
+
+.bg-purple-subtle {
+    background-color: rgba(168, 85, 247, 0.15) !important;
+}
+
+.border-purple-subtle {
+    border-color: rgba(168, 85, 247, 0.35) !important;
+}
+
+/* Lista de Sugestões da iTunes Search API */
+.sugestoes-itunes-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    background-color: #1c1c2b;
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    max-height: 240px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+
+.sugestao-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background-color 0.15s ease;
+}
+
+.sugestao-item:last-child {
+    border-bottom: none;
+}
+
+.sugestao-item:hover, .sugestao-item:focus {
+    background-color: rgba(168, 85, 247, 0.2);
+}
+
+.sugestao-musica {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.sugestao-artista {
+    font-size: 0.82rem;
+    color: #a1a1aa;
+}
+
+.card-bilhetinho-destaque {
+    border-left: 4px solid var(--accent-color) !important;
+}
+
