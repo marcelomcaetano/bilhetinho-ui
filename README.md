@@ -35,11 +35,18 @@ A experiência do usuário é distribuída em três visões com páginas HTML e 
 
 ### 2. Área do Músico — Palco & Gestão (`musico.html` + `js/musico.js`)
 
-* **Propósito:** Painel administrativo e operacional para o artista cadastrar e gerenciar seus shows.
+* **Propósito:** Painel administrativo e operacional para o artista cadastrar shows e gerenciar pedidos de músicas em tempo real.
 * **Identificação e Login por E-mail:** Entrada direta sem senha mediante verificação do e-mail no back-end (`GET /api/musicos/email/{email}`).
 * **Cadastro Rápido de Perfil:** Caso o e-mail não seja localizado, o usuário é direcionado para a tela de criação de perfil de músico (nome artístico, e-mail e estilo musical).
 * **Persistência de Sessão:** Utiliza o `localStorage` do navegador para manter o músico conectado após recarregamentos da página, com opção explícita de encerramento de sessão (`Sair`).
 * **Listagem dos Shows do Artista:** Apresenta exclusivamente os eventos vinculados ao identificador do músico logado (`GET /api/eventos/musico/{id}`).
+* **Acesso aos Pedidos de Cada Show:** Cada card de show possui o botão **"Ver Pedidos de Músicas"** (substituindo o antigo código UUID e botão de cópia).
+* **Gestão de Pedidos (Bilhetinhos) do Show Inline (Sem Modal):**
+  * Ao acionar o botão, a grade de shows é substituída diretamente na página pela tela de fila e histórico de bilhetinhos daquele evento.
+  * **Botão "Meus Shows":** Permite retornar à listagem de shows a qualquer momento.
+  * **Listagem 1 — Fila de Pedidos (Aguardando Atendimento):** Apresenta apenas pedidos com status `PENDENTE`, ordenados do mais antigo para o mais recente (FIFO) pelo campo `data_hora`. Cada item possui botões **Aceitar** e **Rejeitar**, que enviam a alteração de status em tempo real via `PUT /api/bilhetinhos/{id}/status`.
+  * **Listagem 2 — Histórico de Pedidos Atendidos & Rejeitados:** Apresenta os pedidos finalizados com destaque visual, agrupando os pedidos `ACEITO` seguidos pelos `REJEITADO`, ordenados por horário.
+  * **Atualização em Tempo Real:** Botão manual de recarregar e atualização instantânea de contadores e listas após qualquer ação.
 * **Cadastro de Novo Show com ViaCEP:**
   * Modal com formulário para informações da apresentação (nome, data/hora, estabelecimento).
   * **Busca Automática de CEP:** Ao digitar 8 dígitos numéricos (ou clicar na lupa), consome a rota `/api/enderecos/cep/{cep}` e preenche automaticamente logradouro, bairro, cidade e UF.
@@ -94,6 +101,8 @@ A comunicação é encapsulada na pasta modular [`js/api/`](js/api/), com tratam
 | [`eventos.js`](js/api/eventos.js) | `POST /api/eventos` | Cria novo evento com endereço integrado |
 | [`enderecos.js`](js/api/enderecos.js) | `GET /api/enderecos/cep/{cep}` | Consulta dados de endereço por CEP |
 | [`bilhetinhos.js`](js/api/bilhetinhos.js) | `POST /api/bilhetinhos` | Envia pedido de música para o show ativo |
+| [`bilhetinhos.js`](js/api/bilhetinhos.js) | `GET /api/bilhetinhos/evento/{eventoId}` | Lista a fila e o histórico de pedidos do show |
+| [`bilhetinhos.js`](js/api/bilhetinhos.js) | `PUT /api/bilhetinhos/{id}/status` | Atualiza o status do pedido (`ACEITO`, `REJEITADO`) |
 
 ---
 

@@ -164,28 +164,114 @@
                 </div>
             </div>
 
-            <!-- Seção de Shows e Eventos do Músico -->
-            <div class="row g-4">
-                <div class="col-12">
-                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-calendar2-event text-purple fs-4"></i>
-                            <h3 class="h5 fw-bold mb-0 text-white">Seus Shows & Eventos</h3>
-                            <span id="badgeTotalEventos" class="badge bg-purple-subtle text-purple border border-purple-subtle">0 shows</span>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button id="btnAbrirModalNovoEvento" class="btn btn-primary-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
-                                <i class="bi bi-plus-circle me-1"></i> Novo Show
+            <!-- SUB-VISÃO 1: Seção de Shows e Eventos do Músico -->
+            <div id="subsecaoShowsMusico">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar2-event text-purple fs-4"></i>
+                        <h3 class="h5 fw-bold mb-0 text-white">Seus Shows & Eventos</h3>
+                        <span id="badgeTotalEventos" class="badge bg-purple-subtle text-purple border border-purple-subtle">0 shows</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button id="btnAbrirModalNovoEvento" class="btn btn-primary-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoEvento">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Show
+                        </button>
+                        <button id="btnRecarregarEventos" class="btn btn-outline-secondary btn-sm" title="Recarregar lista de shows">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista dinâmica de eventos -->
+                <div id="containerListaEventos" class="row g-3">
+                    <!-- Cards renderizados dinamicamente pelo musico.js -->
+                </div>
+            </div>
+
+            <!-- SUB-VISÃO 2: Seção de Gestão de Pedidos (Bilhetinhos) do Show Selecionado (substitui a lista de shows) -->
+            <div id="subsecaoBilhetinhosMusico" class="d-none">
+                <!-- Cabeçalho do Show Selecionado com Ação de Voltar -->
+                <div class="card card-custom p-4 mb-4 border-secondary-subtle">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" id="btnVoltarParaShows" title="Voltar para a lista de shows">
+                                <i class="bi bi-arrow-left"></i>
+                                <span>Meus Shows</span>
                             </button>
-                            <button id="btnRecarregarEventos" class="btn btn-outline-secondary btn-sm" title="Recarregar lista de shows">
+                            <div class="vr bg-secondary opacity-50 d-none d-md-block" style="height: 32px;"></div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="rounded-circle bg-purple-subtle p-2 text-purple d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                    <i class="bi bi-envelope-paper-heart fs-4"></i>
+                                </span>
+                                <div>
+                                    <h2 class="h5 fw-bold text-white mb-0" id="tituloBilhetinhosEvento">Pedidos de Músicas</h2>
+                                    <div class="text-secondary small mt-1" id="subtituloBilhetinhosEvento">Gerenciamento de fila em tempo real</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnRecarregarBilhetinhos" title="Atualizar pedidos">
                                 <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Lista dinâmica de eventos -->
-                    <div id="containerListaEventos" class="row g-3">
-                        <!-- Cards renderizados dinamicamente pelo musico.js -->
+                <!-- Bloco 1: Pedidos Não Atendidos (Pendentes / Na Fila) -->
+                <div class="card card-custom p-4 mb-4 border-secondary-subtle">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+                        <h3 class="h6 fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-hourglass-split text-warning"></i>
+                            <span>Pedidos na Fila (Aguardando Atendimento)</span>
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle ms-1" id="badgeTotalPendentes">0</span>
+                        </h3>
+                        <span class="text-secondary small fst-italic">Ordenados do mais antigo para o mais recente</span>
+                    </div>
+                    <div class="table-responsive rounded border border-secondary-subtle">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead class="table-dark text-secondary small text-uppercase">
+                                <tr>
+                                    <th scope="col" style="width: 100px;">Horário</th>
+                                    <th scope="col">Música</th>
+                                    <th scope="col">Artista</th>
+                                    <th scope="col">Solicitante</th>
+                                    <th scope="col">Mensagem / Recado</th>
+                                    <th scope="col" class="text-center" style="width: 210px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaPedidosPendentes">
+                                <!-- Inserido dinamicamente via musico.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bloco 2: Histórico de Pedidos (Tocados / Aceitos e Rejeitados) -->
+                <div class="card card-custom p-4 border-secondary-subtle">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+                        <h3 class="h6 fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-check2-all text-purple"></i>
+                            <span>Histórico de Pedidos Atendidos & Rejeitados</span>
+                            <span class="badge bg-purple-subtle text-purple border border-purple-subtle ms-1" id="badgeTotalFinalizados">0</span>
+                        </h3>
+                        <span class="text-secondary small fst-italic">Aceitos seguidos por Rejeitados</span>
+                    </div>
+                    <div class="table-responsive rounded border border-secondary-subtle">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead class="table-dark text-secondary small text-uppercase">
+                                <tr>
+                                    <th scope="col" style="width: 140px;">Status</th>
+                                    <th scope="col" style="width: 100px;">Horário</th>
+                                    <th scope="col">Música</th>
+                                    <th scope="col">Artista</th>
+                                    <th scope="col">Solicitante</th>
+                                    <th scope="col">Mensagem / Recado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaPedidosFinalizados">
+                                <!-- Inserido dinamicamente via musico.js -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -280,6 +366,9 @@
         </div>
     </div>
 
+
+
+
     <!-- Toast Container para Notificações -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="feedbackToast" class="toast align-items-center text-bg-dark border-0" role="alert"
@@ -297,7 +386,7 @@
     <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Script Modular da Área do Músico -->
-    <script type="module" src="js/musico.js?v=1.0.0"></script>
+    <script type="module" src="js/musico.js?v=1.2.0"></script>
 </body>
 
 </html>

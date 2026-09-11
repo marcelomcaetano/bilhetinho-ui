@@ -1,6 +1,7 @@
 import { buscarMusicoPorEmail, cadastrarMusico } from './api/musicos.js';
 import { listarEventosPorMusico, criarEvento } from './api/eventos.js';
 import { buscarEnderecoPorCep } from './api/enderecos.js';
+import { listarBilhetinhosPorEvento, atualizarStatusBilhetinho } from './api/bilhetinhos.js';
 
 // Chave utilizada no localStorage
 const STORAGE_KEY_MUSICO = 'bilhetinho_musico_ativo';
@@ -62,6 +63,22 @@ const toastElement = document.getElementById('feedbackToast');
 const toastMessage = document.getElementById('toastMessage');
 let bsToast = null;
 
+// Subseções de Gestão de Shows e de Bilhetinhos (Pedidos)
+const subsecaoShowsMusico = document.getElementById('subsecaoShowsMusico');
+const subsecaoBilhetinhosMusico = document.getElementById('subsecaoBilhetinhosMusico');
+const tituloBilhetinhosEvento = document.getElementById('tituloBilhetinhosEvento');
+const subtituloBilhetinhosEvento = document.getElementById('subtituloBilhetinhosEvento');
+const btnVoltarParaShows = document.getElementById('btnVoltarParaShows');
+const btnRecarregarBilhetinhos = document.getElementById('btnRecarregarBilhetinhos');
+const tabelaPedidosPendentes = document.getElementById('tabelaPedidosPendentes');
+const badgeTotalPendentes = document.getElementById('badgeTotalPendentes');
+const tabelaPedidosFinalizados = document.getElementById('tabelaPedidosFinalizados');
+const badgeTotalFinalizados = document.getElementById('badgeTotalFinalizados');
+
+// Estado do Evento Selecionado para Gestão de Pedidos
+let eventoSelecionadoId = null;
+let eventoSelecionadoNome = '';
+
 /**
  * Inicialização ao carregar a página
  */
@@ -95,6 +112,7 @@ function exibirVisao(visao) {
         if (inputCadastroNome) inputCadastroNome.focus();
     } else if (visao === 'painel') {
         if (secaoPainelMusico) secaoPainelMusico.classList.remove('d-none');
+        voltarParaListaShows();
     }
 }
 
@@ -294,13 +312,10 @@ async function carregarEventosDoMusico(musicoId) {
 
                         <hr class="border-secondary-subtle my-2">
 
-                        <div class="d-flex justify-content-between align-items-center pt-2">
-                            <div class="small">
-                                <span class="text-secondary me-1">Código do Show:</span>
-                                <span class="badge bg-dark border border-secondary-subtle font-monospace text-purple">${evento.codEvento}</span>
-                            </div>
-                            <button class="btn btn-outline-secondary btn-sm btn-copiar-uuid" data-uuid="${evento.codEvento}" title="Copiar código do evento">
-                                <i class="bi bi-clipboard me-1"></i> Copiar
+                        <div class="pt-2">
+                            <button class="btn btn-primary-gradient w-100 py-2 d-flex align-items-center justify-content-center gap-2 btn-ver-pedidos" data-evento-id="${evento.id}" data-evento-nome="${escapeHtml(evento.nome)}">
+                                <i class="bi bi-envelope-paper-heart"></i>
+                                <span>Ver Pedidos de Músicas</span>
                             </button>
                         </div>
                     </div>
@@ -308,7 +323,7 @@ async function carregarEventosDoMusico(musicoId) {
             `;
         }).join('');
 
-        configurarBotoesCopiarUuid();
+        configurarBotoesVerPedidos();
 
     } catch (error) {
         console.error('Erro ao carregar eventos:', error);
@@ -456,30 +471,351 @@ async function salvarNovoEvento() {
 }
 
 /**
- * Ativa os botões de copiar o UUID do evento para a área de transferência
+ * Configura os botões para abrir a listagem de pedidos de música do evento
  */
-function configurarBotoesCopiarUuid() {
-    const botoes = document.querySelectorAll('.btn-copiar-uuid');
+function configurarBotoesVerPedidos() {
+    const botoes = document.querySelectorAll('.btn-ver-pedidos');
     botoes.forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const uuid = btn.getAttribute('data-uuid');
-            if (!uuid) return;
-
-            try {
-                await navigator.clipboard.writeText(uuid);
-                const originalHtml = btn.innerHTML;
-                btn.className = 'btn btn-success btn-sm';
-                btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Copiado!';
-
-                setTimeout(() => {
-                    btn.className = 'btn btn-outline-secondary btn-sm btn-copiar-uuid';
-                    btn.innerHTML = originalHtml;
-                }, 2000);
-            } catch (err) {
-                exibirToast('Não foi possível copiar o código.', 'warning');
-            }
+        btn.addEventListener('click', () => {
+            const eventoId = btn.getAttribute('data-evento-id');
+            const eventoNome = btn.getAttribute('data-evento-nome') || 'Show';
+            exibirBilhetinhosDoEvento(eventoId, eventoNome);
         });
     });
+}
+
+/**
+ * Substitui a lista de shows pela lista de pedidos (bilhetinhos) do evento
+ * @param {number|string} eventoId 
+ * @param {string} eventoNome 
+ */
+function exibirBilhetinhosDoEvento(eventoId, eventoNome) {
+    eventoSelecionadoId = Number(eventoId);
+    eventoSelecionadoNome = eventoNome;
+
+    // Oculta a listagem de shows e exibe a tela de pedidos
+    if (subsecaoShowsMusico) subsecaoShowsMusico.classList.add('d-none');
+    if (subsecaoBilhetinhosMusico) subsecaoBilhetinhosMusico.classList.remove('d-none');
+
+    if (tituloBilhetinhosEvento) {
+        tituloBilhetinhosEvento.textContent = `Pedidos de Músicas — ${eventoNome}`;
+    }
+    if (subtituloBilhetinhosEvento) {
+        subtituloBilhetinhosEvento.textContent = `Fila de pedidos do show em tempo real`;
+    }
+
+    // Scroll suave para a visualização
+    subsecaoBilhetinhosMusico?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    carregarBilhetinhosDoEvento(eventoSelecionadoId);
+}
+
+/**
+ * Retorna para a listagem de shows do músico
+ */
+function voltarParaListaShows() {
+    eventoSelecionadoId = null;
+    eventoSelecionadoNome = '';
+
+    if (subsecaoBilhetinhosMusico) subsecaoBilhetinhosMusico.classList.add('d-none');
+    if (subsecaoShowsMusico) subsecaoShowsMusico.classList.remove('d-none');
+}
+
+/**
+ * Carrega a fila e o histórico de bilhetinhos do evento e atualiza as duas tabelas:
+ * 1 - Pedidos não atendidos (PENDENTE) ordenados da mais antiga para a mais recente (data_hora asc)
+ * 2 - Pedidos já atendidos (ACEITO) e em seguida rejeitados (REJEITADO), ordenados por data_hora
+ * @param {number} eventoId 
+ */
+async function carregarBilhetinhosDoEvento(eventoId) {
+    if (!eventoId) return;
+
+    if (tabelaPedidosPendentes) {
+        tabelaPedidosPendentes.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-4 text-secondary">
+                    <span class="spinner-border spinner-border-sm text-purple me-2"></span>
+                    Carregando pedidos na fila...
+                </td>
+            </tr>
+        `;
+    }
+    if (tabelaPedidosFinalizados) {
+        tabelaPedidosFinalizados.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-4 text-secondary">
+                    <span class="spinner-border spinner-border-sm text-purple me-2"></span>
+                    Carregando histórico...
+                </td>
+            </tr>
+        `;
+    }
+
+    try {
+        const pedidos = await listarBilhetinhosPorEvento(eventoId);
+        const listaPedidos = Array.isArray(pedidos) ? pedidos : [];
+
+        // 1 - Pedidos que ainda não foram atendidos (status PENDENTE)
+        // Ordenados pelo campo data_hora iniciando pela mais antiga para a mais recente (Ascendente)
+        const pendentes = listaPedidos
+            .filter(p => p.status === 'PENDENTE')
+            .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+
+        // 2 - Pedidos que já foram tocados (ACEITO) e logo em seguida pelos REJEITADO, ordenados pela data_hora
+        const aceitos = listaPedidos
+            .filter(p => p.status === 'ACEITO')
+            .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+
+        const rejeitados = listaPedidos
+            .filter(p => p.status === 'REJEITADO')
+            .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+
+        const finalizados = [...aceitos, ...rejeitados];
+
+        renderizarTabelaPendentes(pendentes);
+        renderizarTabelaFinalizados(finalizados);
+
+    } catch (error) {
+        console.error('Erro ao buscar bilhetinhos do evento:', error);
+        if (tabelaPedidosPendentes) {
+            tabelaPedidosPendentes.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Erro ao carregar fila de pedidos: ${escapeHtml(error.message)}
+                    </td>
+                </tr>
+            `;
+        }
+        if (tabelaPedidosFinalizados) {
+            tabelaPedidosFinalizados.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Erro ao carregar histórico: ${escapeHtml(error.message)}
+                    </td>
+                </tr>
+            `;
+        }
+        exibirToast(`Erro ao carregar pedidos: ${error.message}`, 'danger');
+    }
+}
+
+/**
+ * Renderiza a listagem 1: Pedidos na fila (não atendidos / PENDENTE)
+ * com botões de Aceitar e Rejeitar
+ * @param {Array} pendentes 
+ */
+function renderizarTabelaPendentes(pendentes) {
+    if (badgeTotalPendentes) {
+        badgeTotalPendentes.textContent = `${pendentes.length}`;
+    }
+
+    if (!tabelaPedidosPendentes) return;
+
+    if (pendentes.length === 0) {
+        tabelaPedidosPendentes.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-secondary py-4">
+                    <i class="bi bi-inbox fs-4 d-block mb-1 text-secondary opacity-75"></i>
+                    Nenhum pedido na fila aguardando atendimento.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tabelaPedidosPendentes.innerHTML = pendentes.map(p => {
+        const horaFmt = formatarHoraCurta(p.dataHora);
+        const dataFmt = formatarDataCurta(p.dataHora);
+        const mensagemFmt = p.mensagem && p.mensagem.trim()
+            ? `<span class="text-light fst-italic">"${escapeHtml(p.mensagem)}"</span>`
+            : `<span class="text-secondary">-</span>`;
+
+        return `
+            <tr data-pedido-id="${p.id}">
+                <td>
+                    <span class="fw-semibold text-white">${horaFmt}</span>
+                    <span class="d-block text-secondary small">${dataFmt}</span>
+                </td>
+                <td>
+                    <span class="fw-bold text-white">${escapeHtml(p.musica)}</span>
+                </td>
+                <td>
+                    <span class="text-secondary">${escapeHtml(p.artista)}</span>
+                </td>
+                <td>
+                    <span class="fw-semibold text-light">${escapeHtml(p.nomeSolicitante)}</span>
+                </td>
+                <td>
+                    ${mensagemFmt}
+                </td>
+                <td class="text-center">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="button" class="btn btn-success btn-sm px-2 py-1 btn-aceitar-pedido d-inline-flex align-items-center gap-1" data-id="${p.id}" title="Aceitar / Tocar música">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Aceitar</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm px-2 py-1 btn-rejeitar-pedido d-inline-flex align-items-center gap-1" data-id="${p.id}" title="Rejeitar pedido">
+                            <i class="bi bi-x-circle"></i>
+                            <span>Rejeitar</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    configurarAcoesPedidosPendentes();
+}
+
+/**
+ * Renderiza a listagem 2: Pedidos já tocados (ACEITO) e rejeitados (REJEITADO)
+ * @param {Array} finalizados 
+ */
+function renderizarTabelaFinalizados(finalizados) {
+    if (badgeTotalFinalizados) {
+        badgeTotalFinalizados.textContent = `${finalizados.length}`;
+    }
+
+    if (!tabelaPedidosFinalizados) return;
+
+    if (finalizados.length === 0) {
+        tabelaPedidosFinalizados.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-secondary py-4">
+                    <i class="bi bi-music-note-list fs-4 d-block mb-1 text-secondary opacity-75"></i>
+                    Nenhum pedido atendido ou rejeitado ainda.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tabelaPedidosFinalizados.innerHTML = finalizados.map(p => {
+        const horaFmt = formatarHoraCurta(p.dataHora);
+        const dataFmt = formatarDataCurta(p.dataHora);
+        const isAceito = p.status === 'ACEITO';
+        const badgeStatus = isAceito
+            ? `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check2-circle me-1"></i> ACEITO</span>`
+            : `<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-x-circle me-1"></i> REJEITADO</span>`;
+        const mensagemFmt = p.mensagem && p.mensagem.trim()
+            ? `<span class="text-secondary fst-italic">"${escapeHtml(p.mensagem)}"</span>`
+            : `<span class="text-secondary">-</span>`;
+
+        return `
+            <tr>
+                <td>${badgeStatus}</td>
+                <td>
+                    <span class="fw-semibold text-white">${horaFmt}</span>
+                    <span class="d-block text-secondary small">${dataFmt}</span>
+                </td>
+                <td>
+                    <span class="fw-semibold text-white">${escapeHtml(p.musica)}</span>
+                </td>
+                <td>
+                    <span class="text-secondary">${escapeHtml(p.artista)}</span>
+                </td>
+                <td>
+                    <span class="text-light">${escapeHtml(p.nomeSolicitante)}</span>
+                </td>
+                <td>
+                    ${mensagemFmt}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+/**
+ * Configura os listeners dos botões Aceitar e Rejeitar da tabela de pendentes
+ */
+function configurarAcoesPedidosPendentes() {
+    if (!tabelaPedidosPendentes) return;
+
+    const botoesAceitar = tabelaPedidosPendentes.querySelectorAll('.btn-aceitar-pedido');
+    botoesAceitar.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
+            await alterarStatusDoPedido(id, 'ACEITO', btn);
+        });
+    });
+
+    const botoesRejeitar = tabelaPedidosPendentes.querySelectorAll('.btn-rejeitar-pedido');
+    botoesRejeitar.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.getAttribute('data-id');
+            await alterarStatusDoPedido(id, 'REJEITADO', btn);
+        });
+    });
+}
+
+/**
+ * Executa a requisição de atualização de status do bilhetinho (ACEITO ou REJEITADO)
+ * @param {number|string} pedidoId 
+ * @param {'ACEITO' | 'REJEITADO'} novoStatus 
+ * @param {HTMLElement} botaoElemento 
+ */
+async function alterarStatusDoPedido(pedidoId, novoStatus, botaoElemento) {
+    if (!pedidoId || !eventoSelecionadoId) return;
+
+    // Desabilita os botões da linha para evitar requisições concorrentes
+    const tr = botaoElemento ? botaoElemento.closest('tr') : null;
+    const botoesTr = tr ? tr.querySelectorAll('button') : [];
+    botoesTr.forEach(b => { b.disabled = true; });
+
+    const originalContent = botaoElemento ? botaoElemento.innerHTML : '';
+    if (botaoElemento) {
+        botaoElemento.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+    }
+
+    try {
+        await atualizarStatusBilhetinho(Number(pedidoId), novoStatus);
+        const mensagemFeedback = novoStatus === 'ACEITO'
+            ? 'Música aceita com sucesso!'
+            : 'Pedido rejeitado.';
+        exibirToast(mensagemFeedback, novoStatus === 'ACEITO' ? 'success' : 'warning');
+
+        // Atualiza ambas as listagens da tela
+        await carregarBilhetinhosDoEvento(eventoSelecionadoId);
+    } catch (error) {
+        console.error('Erro ao alterar status do bilhetinho:', error);
+        exibirToast(`Erro ao alterar status: ${error.message}`, 'danger');
+        if (botaoElemento) {
+            botaoElemento.innerHTML = originalContent;
+        }
+        botoesTr.forEach(b => { b.disabled = false; });
+    }
+}
+
+/**
+ * Formata apenas a hora no padrão HH:mm
+ */
+function formatarHoraCurta(dataHoraString) {
+    if (!dataHoraString) return '-';
+    try {
+        const data = new Date(dataHoraString);
+        if (isNaN(data.getTime())) return dataHoraString;
+        return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return dataHoraString;
+    }
+}
+
+/**
+ * Formata apenas o dia/mês no padrão DD/MM
+ */
+function formatarDataCurta(dataHoraString) {
+    if (!dataHoraString) return '';
+    try {
+        const data = new Date(dataHoraString);
+        if (isNaN(data.getTime())) return '';
+        return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    } catch {
+        return '';
+    }
 }
 
 /**
@@ -650,6 +986,25 @@ function configurarEventos() {
         btnRecarregarEventos.addEventListener('click', () => {
             if (musicoAtivo && musicoAtivo.id) {
                 carregarEventosDoMusico(musicoAtivo.id);
+            }
+        });
+    }
+
+    // Botão Voltar para a lista de shows (a partir da tela de bilhetinhos)
+    if (btnVoltarParaShows) {
+        btnVoltarParaShows.addEventListener('click', voltarParaListaShows);
+    }
+
+    // Botão de recarregar bilhetinhos da tela
+    if (btnRecarregarBilhetinhos) {
+        btnRecarregarBilhetinhos.addEventListener('click', async () => {
+            if (eventoSelecionadoId) {
+                const icon = btnRecarregarBilhetinhos.querySelector('i');
+                btnRecarregarBilhetinhos.disabled = true;
+                if (icon) icon.className = 'spinner-border spinner-border-sm me-1';
+                await carregarBilhetinhosDoEvento(eventoSelecionadoId);
+                btnRecarregarBilhetinhos.disabled = false;
+                if (icon) icon.className = 'bi bi-arrow-clockwise me-1';
             }
         });
     }

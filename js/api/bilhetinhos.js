@@ -32,9 +32,9 @@ export async function listarBilhetinhosPorEvento(eventoId) {
 }
 
 /**
- * Atualiza o status de um bilhetinho (ex: PENDENTE, ATENDIDO, RECUSADO).
+ * Atualiza o status de um bilhetinho (ex: PENDENTE, ACEITO, REJEITADO).
  * @param {number} id
- * @param {'PENDENTE' | 'ATENDIDO' | 'RECUSADO'} status
+ * @param {'PENDENTE' | 'ACEITO' | 'REJEITADO'} status
  */
 export async function atualizarStatusBilhetinho(id, status) {
     return request(`/bilhetinhos/${id}/status`, {
