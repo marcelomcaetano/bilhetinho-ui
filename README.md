@@ -170,3 +170,33 @@ bilhetinho-ui/
    * **Página Inicial (Shows Ativos):** [http://localhost:3000](http://localhost:3000) (ou `http://localhost:3000/index.html`)
    * **Área do Músico (Palco & Gestão):** [http://localhost:3000/musico.html](http://localhost:3000/musico.html)
    * **Envio de Bilhetinho (Público):** [http://localhost:3000/bilhetinho.html](http://localhost:3000/bilhetinho.html)
+
+---
+
+## Execução via Docker
+
+O módulo de interface possui containerização completa com **Nginx 1.27 Alpine**, configurado especialmente para servir os módulos ES6 com os tipos MIME adequados (`application/javascript`) e roteamento SPA.
+
+### Construindo e Executando a Interface Web
+
+1. **Construa a imagem Docker na raiz de `bilhetinho-ui`:**
+
+   ```bash
+   docker build -t bilhetinho-ui .
+   ```
+
+2. **Execute o container mapeando a porta 3000:**
+
+   ```bash
+   docker run -d -p 3000:80 --name bilhetinho-ui bilhetinho-ui
+   ```
+
+3. Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
+
+> [!TIP]
+> Para executar a solução completa e integrada (Banco de Dados PostgreSQL + API Spring Boot + Interface Web Nginx) com um único comando, utilize o arquivo `docker-compose.yml` na raiz do repositório orquestrador **`bilhetinho-webgui`**:
+>
+> ```bash
+> cd ../
+> docker compose up --build
+> ```
