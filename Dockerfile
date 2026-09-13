@@ -20,7 +20,7 @@ COPY js/ /usr/share/nginx/html/js/
 
 # Checagem de integridade (Healthcheck)
 HEALTHCHECK --interval=15s --timeout=3s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost/ || exit 1
+  CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
 
 # Porta HTTP padrão do Nginx
 EXPOSE 80

@@ -30,7 +30,7 @@ A experiência do usuário é distribuída em três visões com páginas HTML e 
 * **Barra de Navegação:** Logotipo do sistema à esquerda e botão de navegação direta para a **Área do Músico** (`musico.html`) à direita.
 * **Vitrine Dinâmica de Shows:** Consulta em tempo real o endpoint `GET /api/eventos` do back-end e renderiza cada apresentação ativa em formato de card informativo.
 * **Conteúdo dos Cards:** Nome do evento, artista/músico participante, nome do estabelecimento/local, data e hora formatadas no padrão brasileiro e endereço completo.
-* **Botão "Acessar Show":** Cada card disponibiliza um botão que copia automaticamente o código identificador universal (UUID) do evento para a área de transferência do usuário e redireciona de imediato para a tela de envio de pedidos (`bilhetinho.html`).
+* **Botão "Acessar Show" & Código do Evento:** Cada card disponibiliza um botão para redirecionar diretamente para a tela de envio de pedidos (`bilhetinho.html`) e uma área dedicada com o código do evento (UUID) e ícone interativo para cópia rápida para a área de transferência.
 * **Recarregamento e Estado Vazio:** Botão para atualizar a listagem e mensagem visual amigável quando não houver shows ativos cadastrados.
 
 ### 2. Área do Músico — Palco & Gestão (`musico.html` + `js/musico.js`)
@@ -40,7 +40,8 @@ A experiência do usuário é distribuída em três visões com páginas HTML e 
 * **Cadastro Rápido de Perfil:** Caso o e-mail não seja localizado, o usuário é direcionado para a tela de criação de perfil de músico (nome artístico, e-mail e estilo musical).
 * **Persistência de Sessão:** Utiliza o `localStorage` do navegador para manter o músico conectado após recarregamentos da página, com opção explícita de encerramento de sessão (`Sair`).
 * **Listagem dos Shows do Artista:** Apresenta exclusivamente os eventos vinculados ao identificador do músico logado (`GET /api/eventos/musico/{id}`).
-* **Acesso aos Pedidos de Cada Show:** Cada card de show possui o botão **"Ver Pedidos de Músicas"** (substituindo o antigo código UUID e botão de cópia).
+* **Acesso aos Pedidos de Cada Show:** Cada card de show possui o botão **"Ver Pedidos de Músicas"**.
+* **Exclusão de Shows com Confirmação:** Botão vermelho com ícone de lixeira posicionado ao lado esquerdo do botão "Ver Pedidos de Músicas". Ao ser acionado, exibe modal de confirmação advertindo que a exclusão é irreversível e remove tanto o show quanto todos os pedidos de música vinculados (`DELETE /api/eventos/{id}`).
 * **Gestão de Pedidos (Bilhetinhos) do Show Inline (Sem Modal):**
   * Ao acionar o botão, a grade de shows é substituída diretamente na página pela tela de fila e histórico de bilhetinhos daquele evento.
   * **Botão "Meus Shows":** Permite retornar à listagem de shows a qualquer momento.
@@ -61,7 +62,7 @@ A experiência do usuário é distribuída em três visões com páginas HTML e 
   * **Via URL Direta (QR Code):** Ao escanear o QR Code que contém o parâmetro `?evento=<UUID>`, a página reconhece o código na URL e carrega os dados do show instantaneamente.
 * **Validação de Status:** Se o show estiver marcado como `ENCERRADO`, a tela exibe um aviso e bloqueia novos envios de bilhetinhos.
 * **Formulário de Envio do Bilhetinho:**
-  * **Música e Artista (Obrigatórios):** Integração com a **iTunes Search API** (detalhada na seção de APIs externas). O usuário pode escolher uma das sugestões ou preencher os campos manualmente.
+  * **Música e Busca no iTunes:** Campo unificado com sugestões da **iTunes Search API**. Se o usuário seleciona uma sugestão, os dados são separados (Música e Artista); caso digite livremente sem selecionar sugestão, o texto digitado é aceito como música e o artista é enviado como `null`.
   * **Nome do Solicitante (Opcional):** Caso deixado em branco, o front-end envia o valor padrão `"Anônimo"`.
   * **Mensagem / Recado (Opcional):** Campo para dedicatórias ou observações para o músico (até 255 caracteres).
 * **Tela de Sucesso e Feedback:** Confirmação visual informando que o bilhetinho foi entregue na fila do artista, com resumo do pedido e botão para pedir outra música.

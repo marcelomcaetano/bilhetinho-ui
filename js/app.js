@@ -53,7 +53,7 @@ async function carregarShowsAtivos() {
                             No momento não há apresentações com status ativo no sistema. Assim que um músico iniciar um show, ele aparecerá aqui!
                         </p>
                         <div>
-                            <a href="musico.html" class="btn btn-primary-gradient btn-sm">
+                            <a href="musico.html?v=2.0.1" class="btn btn-primary-gradient btn-sm">
                                 <i class="bi bi-person-badge me-1"></i> Sou Músico e Quero Cadastrar Show
                             </a>
                         </div>
@@ -104,9 +104,19 @@ async function carregarShowsAtivos() {
                         <hr class="border-secondary-subtle my-2">
 
                         <div class="pt-2">
-                            <button class="btn btn-primary-gradient w-100 py-2 btn-acessar-show" data-uuid="${evento.codEvento}" title="Copiar código e acessar a página do show">
+                            <button class="btn btn-primary-gradient w-100 py-2 mb-2 btn-acessar-show" title="Acessar a página do show">
                                 <i class="bi bi-box-arrow-in-right me-1"></i> Acessar Show
                             </button>
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded bg-black bg-opacity-25 border border-secondary-subtle">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden me-2">
+                                    <i class="bi bi-qr-code text-purple flex-shrink-0" title="Código do show"></i>
+                                    <span class="text-secondary small text-nowrap">Código:</span>
+                                    <code class="text-light small font-monospace text-truncate user-select-all" title="${escapeHtml(evento.codEvento)}">${escapeHtml(evento.codEvento)}</code>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary border-0 text-secondary btn-copiar-codigo flex-shrink-0" data-uuid="${escapeHtml(evento.codEvento)}" title="Copiar código do show">
+                                    <i class="bi bi-copy"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -114,6 +124,7 @@ async function carregarShowsAtivos() {
         }).join('');
 
         configurarBotoesAcessarShow();
+        configurarBotoesCopiarCodigo();
 
     } catch (error) {
         console.error('Erro ao carregar shows ativos:', error);
@@ -129,22 +140,42 @@ async function carregarShowsAtivos() {
 }
 
 /**
- * Configura os botões para copiar o código do evento e acessar a página inicial do bilhetinho
+ * Configura os botões para acessar a página inicial do bilhetinho
  */
 function configurarBotoesAcessarShow() {
     const botoes = document.querySelectorAll('.btn-acessar-show');
     botoes.forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
+            window.location.href = 'bilhetinho.html?v=2.0.1';
+        });
+    });
+}
+
+/**
+ * Configura os botões para copiar o código do evento para a área de transferência
+ */
+function configurarBotoesCopiarCodigo() {
+    const botoes = document.querySelectorAll('.btn-copiar-codigo');
+    botoes.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
             const uuid = btn.getAttribute('data-uuid');
             if (!uuid) return;
 
             try {
                 await navigator.clipboard.writeText(uuid);
+                const icone = btn.querySelector('i');
+                if (icone) {
+                    icone.className = 'bi bi-check-lg text-success';
+                    setTimeout(() => {
+                        icone.className = 'bi bi-copy';
+                    }, 2000);
+                }
+                exibirToast('Código do show copiado para a área de transferência!', 'success');
             } catch (err) {
                 console.warn('Não foi possível copiar o código para a área de transferência:', err);
+                exibirToast('Não foi possível copiar o código.', 'warning');
             }
-
-            window.location.href = 'bilhetinho.html';
         });
     });
 }

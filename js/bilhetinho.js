@@ -5,6 +5,7 @@ import { buscarMusicasItunes } from './api/itunes.js';
 // Estado da página
 let eventoAtual = null;
 let timerDebounceItunes = null;
+let sugestaoSelecionada = null; // Armazena { musica, artista } quando selecionado do iTunes
 
 // Elementos - Seções
 const secaoIdentificarEvento = document.getElementById('secaoIdentificarEvento');
@@ -30,8 +31,6 @@ const formBilhetinho = document.getElementById('formBilhetinho');
 const inputBuscaItunes = document.getElementById('inputBuscaItunes');
 const btnLimparBuscaItunes = document.getElementById('btnLimparBuscaItunes');
 const containerSugestoesItunes = document.getElementById('containerSugestoesItunes');
-const inputMusica = document.getElementById('inputMusica');
-const inputArtista = document.getElementById('inputArtista');
 const inputNomeSolicitante = document.getElementById('inputNomeSolicitante');
 const inputMensagem = document.getElementById('inputMensagem');
 const btnEnviarBilhetinho = document.getElementById('btnEnviarBilhetinho');
@@ -73,6 +72,10 @@ function verificarParametroUrl() {
             inputCodigoEvento.value = codUrl.trim();
         }
         carregarEventoPorCodigo(codUrl.trim());
+    } else {
+        if (inputCodigoEvento) {
+            inputCodigoEvento.focus();
+        }
     }
 }
 
@@ -159,8 +162,7 @@ async function carregarEventoPorCodigo(codEvento) {
 function limparFormularioBilhetinho() {
     if (formBilhetinho) formBilhetinho.reset();
     if (inputBuscaItunes) inputBuscaItunes.value = '';
-    if (inputMusica) inputMusica.value = '';
-    if (inputArtista) inputArtista.value = '';
+    sugestaoSelecionada = null;
     if (inputNomeSolicitante) inputNomeSolicitante.value = '';
     if (inputMensagem) inputMensagem.value = '';
     esconderSugestoesItunes();
@@ -182,19 +184,32 @@ async function enviarNovoBilhetinho() {
         return;
     }
 
-    const musica = inputMusica ? inputMusica.value.trim() : '';
-    const artista = inputArtista ? inputArtista.value.trim() : '';
+    const valorBusca = inputBuscaItunes ? inputBuscaItunes.value.trim() : '';
+
+    if (!valorBusca) {
+        exibirToast('Por favor, informe o nome da música.', 'warning');
+        if (inputBuscaItunes) inputBuscaItunes.focus();
+        return;
+    }
+
+    let musica = '';
+    let artista = null;
+
+    // Se o usuário selecionou uma das sugestões do iTunes e o campo reflete a seleção
+    if (sugestaoSelecionada && valorBusca === `${sugestaoSelecionada.musica} - ${sugestaoSelecionada.artista}`) {
+        musica = sugestaoSelecionada.musica;
+        artista = sugestaoSelecionada.artista;
+    } else {
+        // Se o usuário não selecionou uma das sugestões (ou digitou livremente):
+        // aceita o que estiver digitado como música e envia artista como NULL para a API
+        musica = valorBusca;
+        artista = null;
+    }
+
     // Regra do refinamento: nome é opcional, se não informado envia "Anônimo"
     const nomeInformado = inputNomeSolicitante ? inputNomeSolicitante.value.trim() : '';
     const nomeSolicitante = nomeInformado || 'Anônimo';
     const mensagem = inputMensagem ? inputMensagem.value.trim() : null;
-
-    if (!musica || !artista) {
-        exibirToast('Por favor, informe o nome da música e do artista.', 'warning');
-        if (!musica && inputMusica) inputMusica.focus();
-        else if (!artista && inputArtista) inputArtista.focus();
-        return;
-    }
 
     if (btnEnviarBilhetinho) {
         btnEnviarBilhetinho.disabled = true;
@@ -214,7 +229,15 @@ async function enviarNovoBilhetinho() {
 
         // Preenche dados da tela de sucesso
         if (sucessoMusica) sucessoMusica.textContent = bilhetinhoCriado.musica;
-        if (sucessoArtista) sucessoArtista.textContent = bilhetinhoCriado.artista;
+        if (sucessoArtista) {
+            if (bilhetinhoCriado.artista) {
+                sucessoArtista.textContent = bilhetinhoCriado.artista;
+                sucessoArtista.classList.remove('d-none');
+            } else {
+                sucessoArtista.textContent = '';
+                sucessoArtista.classList.add('d-none');
+            }
+        }
         if (sucessoSolicitante) sucessoSolicitante.textContent = `Pedido por: ${bilhetinhoCriado.nomeSolicitante}`;
 
         exibirToast('Bilhetinho entregue com sucesso para o músico!', 'success');
@@ -237,6 +260,11 @@ async function enviarNovoBilhetinho() {
  */
 function manipularBuscaItunes(texto) {
     const termo = texto ? texto.trim() : '';
+
+    // Se o usuário digitou e o texto difere da sugestão previamente selecionada, reseta o estado da sugestão
+    if (sugestaoSelecionada && termo !== `${sugestaoSelecionada.musica} - ${sugestaoSelecionada.artista}`) {
+        sugestaoSelecionada = null;
+    }
 
     if (btnLimparBuscaItunes) {
         btnLimparBuscaItunes.classList.toggle('d-none', termo.length === 0);
@@ -275,7 +303,7 @@ function renderizarSugestoesItunes(sugestoes) {
     if (!sugestoes || sugestoes.length === 0) {
         containerSugestoesItunes.innerHTML = `
             <div class="p-3 text-secondary small text-center">
-                <i class="bi bi-search me-1"></i> Nenhuma sugestão encontrada. Digite o nome da música e artista abaixo.
+                <i class="bi bi-info-circle me-1"></i> Nenhuma sugestão encontrada no iTunes. Você pode enviar a música digitada acima.
             </div>
         `;
         containerSugestoesItunes.classList.remove('d-none');
@@ -298,8 +326,7 @@ function renderizarSugestoesItunes(sugestoes) {
             const m = el.getAttribute('data-musica');
             const a = el.getAttribute('data-artista');
 
-            if (inputMusica) inputMusica.value = m;
-            if (inputArtista) inputArtista.value = a;
+            sugestaoSelecionada = { musica: m, artista: a };
             if (inputBuscaItunes) inputBuscaItunes.value = `${m} - ${a}`;
 
             esconderSugestoesItunes();
@@ -345,6 +372,7 @@ function configurarOuvintesEventos() {
     if (btnLimparBuscaItunes) {
         btnLimparBuscaItunes.addEventListener('click', () => {
             if (inputBuscaItunes) inputBuscaItunes.value = '';
+            sugestaoSelecionada = null;
             btnLimparBuscaItunes.classList.add('d-none');
             esconderSugestoesItunes();
             if (inputBuscaItunes) inputBuscaItunes.focus();

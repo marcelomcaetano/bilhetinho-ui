@@ -34,3 +34,9 @@ export async function atualizarStatusEvento(id, status) {
         body: JSON.stringify({ status })
     });
 }
+
+export async function excluirEvento(id) {
+    return request(`/eventos/${id}`, {
+        method: 'DELETE'
+    });
+}

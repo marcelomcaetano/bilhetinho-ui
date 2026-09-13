@@ -1,5 +1,5 @@
 import { buscarMusicoPorEmail, cadastrarMusico } from './api/musicos.js';
-import { listarEventosPorMusico, criarEvento } from './api/eventos.js';
+import { listarEventosPorMusico, criarEvento, excluirEvento } from './api/eventos.js';
 import { buscarEnderecoPorCep } from './api/enderecos.js';
 import { listarBilhetinhosPorEvento, atualizarStatusBilhetinho } from './api/bilhetinhos.js';
 
@@ -58,6 +58,13 @@ const inputEventoCidade = document.getElementById('inputEventoCidade');
 const inputEventoUf = document.getElementById('inputEventoUf');
 const btnSalvarNovoEvento = document.getElementById('btnSalvarNovoEvento');
 
+// Modal de Confirmação de Exclusão de Show
+const modalExcluirEventoElement = document.getElementById('modalExcluirEvento');
+let bsModalExcluirEvento = null;
+const nomeEventoExclusao = document.getElementById('nomeEventoExclusao');
+const btnConfirmarExclusaoEvento = document.getElementById('btnConfirmarExclusaoEvento');
+let eventoIdParaExcluir = null;
+
 // Toasts de Feedback
 const toastElement = document.getElementById('feedbackToast');
 const toastMessage = document.getElementById('toastMessage');
@@ -89,6 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (modalNovoEventoElement) {
         bsModalNovoEvento = new bootstrap.Modal(modalNovoEventoElement);
+    }
+
+    if (modalExcluirEventoElement) {
+        bsModalExcluirEvento = new bootstrap.Modal(modalExcluirEventoElement);
     }
 
     configurarEventos();
@@ -312,8 +323,11 @@ async function carregarEventosDoMusico(musicoId) {
 
                         <hr class="border-secondary-subtle my-2">
 
-                        <div class="pt-2">
-                            <button class="btn btn-primary-gradient w-100 py-2 d-flex align-items-center justify-content-center gap-2 btn-ver-pedidos" data-evento-id="${evento.id}" data-evento-nome="${escapeHtml(evento.nome)}">
+                        <div class="pt-2 d-flex gap-2">
+                            <button type="button" class="btn btn-danger px-3 py-2 d-flex align-items-center justify-content-center gap-1 btn-excluir-evento" data-evento-id="${evento.id}" data-evento-nome="${escapeHtml(evento.nome)}" title="Excluir este show">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                            <button class="btn btn-primary-gradient flex-grow-1 py-2 d-flex align-items-center justify-content-center gap-2 btn-ver-pedidos" data-evento-id="${evento.id}" data-evento-nome="${escapeHtml(evento.nome)}">
                                 <i class="bi bi-envelope-paper-heart"></i>
                                 <span>Ver Pedidos de Músicas</span>
                             </button>
@@ -324,6 +338,7 @@ async function carregarEventosDoMusico(musicoId) {
         }).join('');
 
         configurarBotoesVerPedidos();
+        configurarBotoesExcluirEvento();
 
     } catch (error) {
         console.error('Erro ao carregar eventos:', error);
@@ -480,6 +495,26 @@ function configurarBotoesVerPedidos() {
             const eventoId = btn.getAttribute('data-evento-id');
             const eventoNome = btn.getAttribute('data-evento-nome') || 'Show';
             exibirBilhetinhosDoEvento(eventoId, eventoNome);
+        });
+    });
+}
+
+/**
+ * Configura os botões para abrir o modal de confirmação de exclusão do show
+ */
+function configurarBotoesExcluirEvento() {
+    const botoes = document.querySelectorAll('.btn-excluir-evento');
+    botoes.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            eventoIdParaExcluir = btn.getAttribute('data-evento-id');
+            const nome = btn.getAttribute('data-evento-nome') || 'este show';
+            if (nomeEventoExclusao) {
+                nomeEventoExclusao.textContent = `"${nome}"`;
+            }
+            if (bsModalExcluirEvento) {
+                bsModalExcluirEvento.show();
+            }
         });
     });
 }
@@ -642,7 +677,7 @@ function renderizarTabelaPendentes(pendentes) {
                     <span class="fw-bold text-white">${escapeHtml(p.musica)}</span>
                 </td>
                 <td>
-                    <span class="text-secondary">${escapeHtml(p.artista)}</span>
+                    <span class="text-secondary">${escapeHtml(p.artista || '-')}</span>
                 </td>
                 <td>
                     <span class="fw-semibold text-light">${escapeHtml(p.nomeSolicitante)}</span>
@@ -714,7 +749,7 @@ function renderizarTabelaFinalizados(finalizados) {
                     <span class="fw-semibold text-white">${escapeHtml(p.musica)}</span>
                 </td>
                 <td>
-                    <span class="text-secondary">${escapeHtml(p.artista)}</span>
+                    <span class="text-secondary">${escapeHtml(p.artista || '-')}</span>
                 </td>
                 <td>
                     <span class="text-light">${escapeHtml(p.nomeSolicitante)}</span>
@@ -1059,6 +1094,47 @@ function configurarEventos() {
         formNovoEvento.addEventListener('submit', (e) => {
             e.preventDefault();
             salvarNovoEvento();
+        });
+    }
+
+    // Botão Confirmar Exclusão de Show no Modal
+    if (btnConfirmarExclusaoEvento) {
+        btnConfirmarExclusaoEvento.addEventListener('click', async () => {
+            if (!eventoIdParaExcluir) return;
+
+            btnConfirmarExclusaoEvento.disabled = true;
+            btnConfirmarExclusaoEvento.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Excluindo...';
+
+            try {
+                await excluirEvento(Number(eventoIdParaExcluir));
+                if (bsModalExcluirEvento) {
+                    bsModalExcluirEvento.hide();
+                }
+                exibirToast('Show e todos os pedidos relacionados foram excluídos com sucesso!', 'success');
+
+                // Se o show excluído estiver atualmente aberto na gestão de pedidos, volta para a lista
+                if (eventoSelecionadoId && Number(eventoSelecionadoId) === Number(eventoIdParaExcluir)) {
+                    voltarParaListaShows();
+                }
+
+                eventoIdParaExcluir = null;
+
+                if (musicoAtivo && musicoAtivo.id) {
+                    await carregarEventosMusico(musicoAtivo.id);
+                }
+            } catch (err) {
+                console.error('Erro ao excluir show:', err);
+                exibirToast(err.message || 'Erro ao excluir o show.', 'danger');
+            } finally {
+                btnConfirmarExclusaoEvento.disabled = false;
+                btnConfirmarExclusaoEvento.innerHTML = '<i class="bi bi-trash3-fill me-2"></i> Confirmar Exclusão';
+            }
+        });
+    }
+
+    if (modalExcluirEventoElement) {
+        modalExcluirEventoElement.addEventListener('hidden.bs.modal', () => {
+            eventoIdParaExcluir = null;
         });
     }
 }
