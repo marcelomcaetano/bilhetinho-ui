@@ -1120,7 +1120,7 @@ function configurarEventos() {
                 eventoIdParaExcluir = null;
 
                 if (musicoAtivo && musicoAtivo.id) {
-                    await carregarEventosMusico(musicoAtivo.id);
+                    await carregarEventosDoMusico(musicoAtivo.id);
                 }
             } catch (err) {
                 console.error('Erro ao excluir show:', err);
